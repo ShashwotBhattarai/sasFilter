@@ -1,13 +1,15 @@
 import express from "express";
 import connectDB from "./database/db.connect";
-import { Products } from "./database/models/product.model";
+import { generateMongoDBQuery } from "./services/createDynamicQueries.service";
 
 const app = express();
 const port = 3000;
+app.use(express.json());
 
 connectDB();
 
 app.get("/filter", async (req, res) => {
+
   /*
 
   This is the structure of req we expect from the frontend.
@@ -15,25 +17,18 @@ app.get("/filter", async (req, res) => {
    req.body = {
      queries: [
        { condition_1: "product title", condition_2: "contains", value: "ram" },
-       { condition_1: "product vendor", condition_2: "contains", value: "Acme" },
+       { condition_1: "product vendor", condition_2: "is equals to", value: "Acme" },
+       { condition_1: "product quantity", condition_2: "is less than", value: 20 },
+       { condition_1: "product title", condition_2: "ends with", value: "ram" },
     ],
     logic: "and" || "or",
   };
 
   */
 
-  const productVendor = req.query.productVendor;
-  const productTag = req.query.productTag;
+  const result = await  generateMongoDBQuery(req.body);
 
-  const filteredData_and_operation = await Products.find({
-    vendor: productVendor,
-    tags: productTag,
-  });
-  const filteredData_or_operation = await Products.find({
-    $or: [{ vendor: productVendor }, { tags: productTag }],
-  });
-
-  res.send({ and: filteredData_and_operation, or: filteredData_or_operation });
+ res.send(result);
 });
 
 app.listen(port, () => {
