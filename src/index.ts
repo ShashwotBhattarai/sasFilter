@@ -8,14 +8,19 @@ const port = 3000;
 connectDB();
 
 app.get("/filter", async (req, res) => {
+  /*
 
-//   req.body = {
-//     queries: [
-//       { condition_1: "product title", condition_2: "contains", value: "ram" },
-//       { condition_1: "product vendor", condition_2: "contains", value: "Acme" },
-//     ],
-//     logic: "and" || "or",
-//   };
+  This is the structure of req we expect from the frontend.
+  
+   req.body = {
+     queries: [
+       { condition_1: "product title", condition_2: "contains", value: "ram" },
+       { condition_1: "product vendor", condition_2: "contains", value: "Acme" },
+    ],
+    logic: "and" || "or",
+  };
+
+  */
 
   const productVendor = req.query.productVendor;
   const productTag = req.query.productTag;
