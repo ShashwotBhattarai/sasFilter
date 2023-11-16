@@ -1,50 +1,44 @@
-Certainly! Here's the information you provided formatted in Markdown (.md) syntax:
 
----
+# Project Overview
 
-## Project Objective:
+## Objective
 
-The goal of this project is to:
+This project aims to connect to the sasSYNC database, allowing clients to run query filters on products and collections of a specific store. The filtering is based on conditions provided by the client, using a logical operator to combine multiple queries.
 
-- Connect to the sasSYNC database.
-- Execute query filters on products and collections within a single store.
+## HTTP Request Payload
 
-## HTTP Request Payload Format:
+The server-side application expects an HTTP request with a JSON payload in the body. The payload should include:
 
-The client sends a request with the following structure:
-
-### Request Body:
+### Request Body Example
 
 ```json
 {
   "queries": [
     {
-      "condition_1": "product title",
-      "condition_2": "contains",
-      "value": "ram"
+      "condition": "vendor",
+      "operator": "contains",
+      "value": "Acme"
     },
     {
-      "condition_1": "product vendor",
-      "condition_2": "contains",
-      "value": "Acme"
+      "condition": "tags",
+      "operator": "contains",
+      "value": "hat"
+    },
+    {
+      "condition": "title",
+      "operator": "ends with",
+      "value": "s"
     }
   ],
-  "logic": "and" or "or"
+  "logic": "or"
 }
 ```
 
-- **`req.body`**: This constitutes a section of the HTTP request body in a server-side application, conveying the payload or data from the client to the server.
+- **queries (Array):** An array of objects representing individual filtering conditions. Each object contains:
+  - **condition:** The field or property against which the query will be applied (e.g., "vendor," "tags," "title").
+  - **operator:** The type of comparison or operation to perform on the field (e.g., "contains," "ends with").
+  - **value:** The specific value to be used in the comparison.
 
-- **`queries` (Array)**: Contains objects, with each object representing a query condition for filtering operations.
-
-  - **`condition_1`**: Specifies the attribute or property against which the query will be applied, such as "product title" or "product vendor".
-
-  - **`condition_2`**: Defines the type of comparison or operation to perform on the field; for instance, "contains" implies that the field's value must contain the provided value.
-
-  - **`value`**: Indicates the specific value to be used in the comparison; for example, "ram" for "product title" and "Acme" for "product vendor".
-
-- **`logic`**: Represents the logical operator used to combine multiple queries, determining how conditions are related. It can be either "and" or "or," indicating whether all conditions must be true (and) or at least one condition must be true (or).
+- **logic:** A logical operator determining how multiple conditions are combined. It can be either "and" or "or," specifying whether all conditions must be true (and) or at least one condition must be true (or).
 
 
-
----
