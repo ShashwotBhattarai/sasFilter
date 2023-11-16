@@ -11,61 +11,71 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateMongoDBQuery = void 0;
 const product_model_1 = require("../database/models/product.model");
-const { MongoClient } = require('mongodb');
+const { MongoClient } = require("mongodb");
 function generateMongoDBQuery(reqBody) {
     return __awaiter(this, void 0, void 0, function* () {
+        //     {
+        //         "queries": [
+        //           { "condition_1": "product vendor", "condition_2": "is equal to", "value": "Acme" },
+        //           { "condition_1": "product quantity", "condition_2": "is less than", "value": "20" },
+        //           { "condition_1": "product title", "condition_2": "ends with", "value": "g" }
+        //        ],
+        //        "logic": "or"
+        //    }
         let mongoQuery = [];
         for (const query of reqBody.queries) {
-            const { condition_1, condition_2, value } = query;
+            const { condition, operator, value } = query;
             let subQuery;
-            switch (condition_2) {
-                case 'is equal to':
-                    subQuery = { [condition_1]: value };
+            switch (operator) {
+                case "is equal to":
+                    subQuery = { [condition]: value };
                     break;
-                case 'is not equal to':
-                    subQuery = { [condition_1]: { $ne: value } };
+                case "is not equal to":
+                    subQuery = { [condition]: { $ne: value } };
                     break;
-                case 'starts with':
-                    subQuery = { [condition_1]: { $regex: `^${value}`, $options: 'i' } };
+                case "starts with":
+                    subQuery = { [condition]: { $regex: `^${value}`, $options: "i" } };
                     break;
-                case 'ends with':
-                    subQuery = { [condition_1]: { $regex: `${value}$`, $options: 'i' } };
+                case "ends with":
+                    subQuery = { [condition]: { $regex: `${value}$`, $options: "i" } };
                     break;
-                case 'contains':
-                    subQuery = { [condition_1]: { $regex: value, $options: 'i' } };
+                case "contains":
+                    subQuery = { [condition]: { $regex: value, $options: "i" } };
                     break;
-                case 'does not contain':
-                    subQuery = { [condition_1]: { $not: { $regex: value, $options: 'i' } } };
+                case "does not contain":
+                    subQuery = {
+                        [condition]: { $not: { $regex: value, $options: "i" } },
+                    };
                     break;
-                case 'is greater than':
-                    subQuery = { [condition_1]: { $gt: value } };
+                case "is greater than":
+                    subQuery = { [condition]: { $gt: value } };
                     break;
-                case 'is less than':
-                    subQuery = { [condition_1]: { $lt: value } };
+                case "is less than":
+                    subQuery = { [condition]: { $lt: value } };
                     break;
-                case 'is not empty':
-                    subQuery = { [condition_1]: { $exists: true, $ne: '' } };
+                case "is not empty":
+                    subQuery = { [condition]: { $exists: true, $ne: "" } };
                     break;
-                case 'is empty':
-                    subQuery = { [condition_1]: { $exists: true, $eq: '' } };
+                case "is empty":
+                    subQuery = { [condition]: { $exists: true, $eq: "" } };
                     break;
                 // Add more cases as needed
                 default:
-                    throw new Error(`Unsupported condition_2: ${condition_2}`);
+                    throw new Error(`Unsupported condition_2: ${operator}`);
             }
             mongoQuery.push(subQuery);
         }
         let finalQuery;
-        if (reqBody.logic === 'and') {
+        if (reqBody.logic === "and") {
             finalQuery = { $and: mongoQuery };
         }
-        else if (reqBody.logic === 'or') {
+        else if (reqBody.logic === "or") {
             finalQuery = { $or: mongoQuery };
         }
         else {
             throw new Error(`Unsupported logic: ${reqBody.logic}`);
         }
-        console.log(finalQuery);
+        console.log(JSON.stringify(finalQuery));
         try {
             const result = yield product_model_1.Products.find(finalQuery);
             return result;
