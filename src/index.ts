@@ -1,6 +1,8 @@
 import express from "express";
 import connectDB from "./database/db.connect";
 import { generateMongoDBQuery } from "./services/createDynamicQueries.service";
+import { validateRequestQuery } from "./middlewares/validators/request-query.validate";
+
 
 const app = express();
 const port = 3000;
@@ -8,27 +10,25 @@ app.use(express.json());
 
 connectDB();
 
-app.get("/filter", async (req, res) => {
-
+app.get("/filter",validateRequestQuery, async (req, res) => {
   /*
 
   This is the structure of req we expect from the frontend.
   
    req.body = {
-     queries: [
-       { condition_1: "product title", condition_2: "contains", value: "ram" },
-       { condition_1: "product vendor", condition_2: "is equals to", value: "Acme" },
-       { condition_1: "product quantity", condition_2: "is less than", value: 20 },
-       { condition_1: "product title", condition_2: "ends with", value: "ram" },
+     "queries": [
+       { "condition": "vendor", "operator": "is equal to", "value": "Acme" },
+       { "condition": "tags", "operator": "contains", "value": "hat" },
+       { "condition": "title", "operator": "ends with", "value": "s" }
     ],
-    logic: "and" || "or",
-  };
+    "logic": "or"
+}
 
   */
 
-  const result = await  generateMongoDBQuery(req.body);
+  const result = await generateMongoDBQuery(req.body);
 
- res.send(result);
+  res.send(result);
 });
 
 app.listen(port, () => {
