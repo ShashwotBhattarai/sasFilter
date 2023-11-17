@@ -14,28 +14,29 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const db_connect_1 = __importDefault(require("./database/db.connect"));
-const product_model_1 = require("./database/models/product.model");
+const createDynamicQueries_service_1 = require("./services/createDynamicQueries.service");
+const request_query_validate_1 = require("./middlewares/validators/request-query.validate");
 const app = (0, express_1.default)();
 const port = 3000;
+app.use(express_1.default.json());
 (0, db_connect_1.default)();
-app.get("/filter", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    //   req.body = {
-    //     queries: [
-    //       { condition_1: "product title", condition_2: "contains", value: "ram" },
-    //       { condition_1: "product vendor", condition_2: "contains", value: "Acme" },
-    //     ],
-    //     logic: "and" || "or",
-    //   };
-    const productVendor = req.query.productVendor;
-    const productTag = req.query.productTag;
-    const filteredData_and_operation = yield product_model_1.Products.find({
-        vendor: productVendor,
-        tags: productTag,
-    });
-    const filteredData_or_operation = yield product_model_1.Products.find({
-        $or: [{ vendor: productVendor }, { tags: productTag }],
-    });
-    res.send({ and: filteredData_and_operation, or: filteredData_or_operation });
+app.get("/filter", request_query_validate_1.validateRequestQuery, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    /*
+  
+    This is the structure of req we expect from the frontend.
+    
+     req.body = {
+       "queries": [
+         { "condition": "vendor", "operator": "is equal to", "value": "Acme" },
+         { "condition": "tags", "operator": "contains", "value": "hat" },
+         { "condition": "title", "operator": "ends with", "value": "s" }
+      ],
+      "logic": "or"
+  }
+  
+    */
+    const result = yield (0, createDynamicQueries_service_1.generateMongoDBQuery)(req.body);
+    res.send(result);
 }));
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
