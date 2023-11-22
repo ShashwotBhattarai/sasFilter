@@ -2,14 +2,15 @@ import express from "express";
 import connectDB from "./database/db.connect";
 import { generateMongoDBQuery } from "./services/createDynamicQueries.service";
 import { validateRequestQuery } from "./middlewares/validators/request-query.validate";
-
+import cors from "cors";
 const app = express();
+app.use(cors());
 const port = 3000;
 app.use(express.json());
 
 connectDB();
 
-app.get("/filter", validateRequestQuery, async (req, res) => {
+app.post("/filter", validateRequestQuery, async (req, res) => {
   /*
 
   This is the structure of req we expect from the frontend.
