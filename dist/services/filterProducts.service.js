@@ -17,8 +17,8 @@ class FilterProductsService {
         return __awaiter(this, void 0, void 0, function* () {
             const logic = reqBody.logic;
             const { varientsQuery, productQuery } = this.seperateQueries(reqBody);
-            const filteredProductResponse = this.searchAndReturnProducts(productQuery, varientsQuery, logic);
-            return { status: 200, message: filteredProductResponse };
+            const filteredProductResponse = yield this.searchAndReturnProducts(productQuery, varientsQuery, logic);
+            return { status: filteredProductResponse === null || filteredProductResponse === void 0 ? void 0 : filteredProductResponse.status, message: filteredProductResponse === null || filteredProductResponse === void 0 ? void 0 : filteredProductResponse.message };
         });
     }
     seperateQueries(mainQuery) {
@@ -101,7 +101,7 @@ class FilterProductsService {
                         const productsQueryResult = yield product_model_1.Products.find({
                             _id: { $in: finalArrayOfIds },
                         });
-                        return productQueryResult;
+                        return { status: 200, message: productsQueryResult };
                     }
                     else if (logic == "or") {
                         console.log("iam inside or block");
@@ -109,11 +109,14 @@ class FilterProductsService {
                             ...uniqueProductIdsFromProduct,
                             ...uniqueProductIdsFromVarient,
                         ]);
+                        console.log(finalSetOfIds);
                         const finalArrayOfIds = Array.from(finalSetOfIds);
+                        console.log(finalArrayOfIds);
                         const productsQueryResult = yield product_model_1.Products.find({
                             _id: { $in: finalArrayOfIds },
                         });
-                        return productQueryResult;
+                        console.log(productsQueryResult.length);
+                        return { status: 200, message: productsQueryResult };
                     }
                 }
                 catch (err) {

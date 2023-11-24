@@ -57,6 +57,5 @@ const productVariantsSchema = new mongoose_1.Schema({
         ref: "Products",
     },
 }, { timestamps: true, usePushEach: true });
-const ProductVariants = mongoose_1.default.models.ProductVariants ||
-    (0, mongoose_1.model)("ProductVariants", productVariantsSchema);
+const ProductVariants = mongoose_1.default.models.ProductVariants || (0, mongoose_1.model)("ProductVariants", productVariantsSchema);
 exports.ProductVariants = ProductVariants;

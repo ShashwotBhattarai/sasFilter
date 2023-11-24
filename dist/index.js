@@ -16,11 +16,13 @@ const express_1 = __importDefault(require("express"));
 const db_connect_1 = __importDefault(require("./database/db.connect"));
 const filterProducts_service_1 = require("./services/filterProducts.service");
 const request_query_validate_1 = require("./middlewares/validators/request-query.validate");
+const cors_1 = __importDefault(require("cors"));
 const app = (0, express_1.default)();
 const port = 3000;
 app.use(express_1.default.json());
+app.use((0, cors_1.default)());
 (0, db_connect_1.default)();
-app.get("/filter", request_query_validate_1.validateRequestQuery, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.post("/filter", request_query_validate_1.validateRequestQuery, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     /*
 
   This is the structure of req we expect from the frontend.

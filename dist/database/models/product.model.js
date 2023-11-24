@@ -91,6 +91,5 @@ const productsSchema = new mongoose_1.Schema({
         },
     ],
 }, { timestamps: true, usePushEach: true });
-let Products = mongoose_1.default.models.Products ||
-    (0, mongoose_1.model)("Products", productsSchema);
+let Products = mongoose_1.default.models.Products || (0, mongoose_1.model)("Products", productsSchema);
 exports.Products = Products;

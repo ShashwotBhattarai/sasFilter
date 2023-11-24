@@ -2,14 +2,16 @@ import express from "express";
 import connectDB from "./database/db.connect";
 import { FilterProductsService } from "./services/filterProducts.service";
 import { validateRequestQuery } from "./middlewares/validators/request-query.validate";
+import cors from "cors";
 
 const app = express();
 const port = 3000;
 app.use(express.json());
+app.use(cors());
 
 connectDB();
 
-app.get("/filter", validateRequestQuery, async (req, res) => {
+app.post("/filter", validateRequestQuery, async (req, res) => {
 	/*
 
   This is the structure of req we expect from the frontend.
