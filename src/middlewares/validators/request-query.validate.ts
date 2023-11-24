@@ -89,7 +89,7 @@ export const validateRequestQuery = (
         condition: conditionSchema.required(),
         operator: Joi.string().required(),
         value: [Joi.number(), Joi.string()],
-      })
+      }).required()
     ),
   });
 

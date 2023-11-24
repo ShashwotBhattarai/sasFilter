@@ -84,7 +84,7 @@ const validateRequestQuery = (req, res, next) => {
             condition: conditionSchema.required(),
             operator: joi_1.default.string().required(),
             value: [joi_1.default.number(), joi_1.default.string()],
-        })),
+        }).required()),
     });
     const { error } = schema.validate(req.body);
     if (error) {
