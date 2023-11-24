@@ -9,16 +9,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GenerateDynamicMongoDBQueryService = void 0;
+exports.FilterProductsService = void 0;
 const product_model_1 = require("../database/models/product.model");
 const productVarients_model_1 = require("../database/models/productVarients.model");
-class GenerateDynamicMongoDBQueryService {
-    generateMongoDBQuery(reqBody) {
+class FilterProductsService {
+    filterProducts(reqBody) {
         return __awaiter(this, void 0, void 0, function* () {
             const logic = reqBody.logic;
             const { varientsQuery, productQuery } = this.seperateQueries(reqBody);
-            const productResultResponse = this.searchAndReturnProducts(varientsQuery, productQuery, logic);
-            return productResultResponse;
+            // console.log(JSON.stringify(varientsQuery));
+            // console.log(JSON.stringify(productQuery));
+            const filteredProductResponse = this.searchAndReturnProducts(productQuery, varientsQuery, logic);
+            return filteredProductResponse;
         });
     }
     seperateQueries(mainQuery) {
@@ -56,6 +58,7 @@ class GenerateDynamicMongoDBQueryService {
                 let mongoQueryForProduct = this.mongoQueryGenerator(productQuery, logic);
                 try {
                     const productsQueryResult = yield product_model_1.Products.find(mongoQueryForProduct);
+                    console.log(productsQueryResult.length);
                     return { status: 200, message: productsQueryResult };
                 }
                 catch (err) {
@@ -146,4 +149,4 @@ class GenerateDynamicMongoDBQueryService {
         return finalQuery;
     }
 }
-exports.GenerateDynamicMongoDBQueryService = GenerateDynamicMongoDBQueryService;
+exports.FilterProductsService = FilterProductsService;

@@ -1,6 +1,6 @@
 import express from "express";
 import connectDB from "./database/db.connect";
-import { generateMongoDBQuery } from "./services/createDynamicQueries.service";
+import { FilterProductsService } from "./services/filterProducts.service";
 import { validateRequestQuery } from "./middlewares/validators/request-query.validate";
 
 const app = express();
@@ -10,7 +10,7 @@ app.use(express.json());
 connectDB();
 
 app.get("/filter", validateRequestQuery, async (req, res) => {
-  /*
+	/*
 
   This is the structure of req we expect from the frontend.
   
@@ -25,11 +25,11 @@ app.get("/filter", validateRequestQuery, async (req, res) => {
 
   */
 
-  const result = await generateMongoDBQuery(req.body);
+	const result = await new FilterProductsService().filterProducts(req.body);
 
-  res.send(result);
+	res.send(result);
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+	console.log(`Server is running on port ${port}`);
 });
