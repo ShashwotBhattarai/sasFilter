@@ -27,8 +27,8 @@ app.get("/filter", request_query_validate_1.validateRequestQuery, (req, res) => 
     
      req.body = {
        "queries": [
-         { "condition": "vendor", "operator": "is equal to", "value": "Acme" },
-         { "condition": "tags", "operator": "contains", "value": "hat" },
+         { "condition": "vendor", "operator": "contains", "value": "Acme" },
+         { "condition": "tags", "operator": "contains","value": "hat" },
          { "condition": "title", "operator": "ends with", "value": "s" }
       ],
       "logic": "or"

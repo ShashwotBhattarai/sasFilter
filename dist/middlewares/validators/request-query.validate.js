@@ -8,11 +8,10 @@ const joi_1 = __importDefault(require("joi"));
 const conditions = [
     "title",
     "product_type",
-    "product_category",
     "vendor",
     "tags",
     "price",
-    "compare-at-price",
+    "compare_at_price",
     "weight",
     "inventory_stock",
     "variants_title",
@@ -65,7 +64,6 @@ const operators = {
     ],
 };
 const conditionSchema = joi_1.default.string().valid(...conditions);
-// Define the Joi schema for operators
 const operatorSchema = joi_1.default.object().keys({
     title: joi_1.default.string().valid(...operators.title),
     product_type: joi_1.default.string().valid(...operators.product_type),
@@ -80,23 +78,20 @@ const operatorSchema = joi_1.default.object().keys({
 });
 const validateRequestQuery = (req, res, next) => {
     const { logic, queries } = req.body;
-    // Define the schema for the entire request body
     const schema = joi_1.default.object({
         logic: joi_1.default.string().required(),
         queries: joi_1.default.array().items(joi_1.default.object({
             condition: conditionSchema.required(),
             operator: joi_1.default.string().required(),
-            value: joi_1.default.string().required(), // You may want to adjust this based on your actual operators
-        })),
+            value: [joi_1.default.number(), joi_1.default.string()],
+        }).required()),
     });
-    // Validate the entire request body against the schema
     const { error } = schema.validate(req.body);
     if (error) {
         return res
             .status(400)
             .json({ error: error.details.map((detail) => detail.message) });
     }
-    // Additional validation for conditions and operators
     for (const element of queries) {
         const { error: conditionError } = conditionSchema.validate(element.condition);
         const { error: operatorError } = operatorSchema.validate({

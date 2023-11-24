@@ -1,12 +1,12 @@
-import { Schema, model, InferSchemaType } from 'mongoose';
+import mongoose, { Schema, model, Model, InferSchemaType } from "mongoose";
 
 const productsSchema = new Schema(
   {
     _id: Number,
-    shopId: { type: Number, index: true },
+    shop_id: { type: Number, index: true, required: true },
     title: {
       type: String,
-      required: [true, "can't be blank"]
+      required: [true, "can't be blank"],
     },
     handle: { type: String, index: true },
     body_html: String,
@@ -21,8 +21,8 @@ const productsSchema = new Schema(
     variants: [
       {
         type: Number,
-        ref: 'ProductVariants'
-      }
+        ref: "ProductVariants",
+      },
     ],
     options: [
       {
@@ -30,8 +30,8 @@ const productsSchema = new Schema(
         product_id: String,
         name: String,
         position: Number,
-        values: [String]
-      }
+        values: [String],
+      },
     ],
     images: [
       {
@@ -44,8 +44,8 @@ const productsSchema = new Schema(
         width: Number,
         height: Number,
         src: String,
-        variant_ids: [String]
-      }
+        variant_ids: [String],
+      },
     ],
     image: {
       _id: String,
@@ -57,21 +57,23 @@ const productsSchema = new Schema(
       width: Number,
       height: Number,
       src: String,
-      variant_ids: [String]
+      variant_ids: [String],
     },
     metafields: [
       {
         namespace: String,
         key: String,
-        value: String
-      }
-    ]
+        value: String,
+      },
+    ],
   },
   { timestamps: true, usePushEach: true }
 );
 
-export type SchemaType = InferSchemaType<typeof productsSchema>;
+export type ProductSchemaType = InferSchemaType<typeof productsSchema>;
 
-const Products = model<SchemaType>('Products', productsSchema);
+let Products: Model<ProductSchemaType> =
+  mongoose.models.Products ||
+  model<ProductSchemaType>("Products", productsSchema);
 
 export { Products };

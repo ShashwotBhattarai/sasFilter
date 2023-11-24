@@ -4,11 +4,10 @@ import Joi from "joi";
 const conditions = [
   "title",
   "product_type",
-  "product_category",
   "vendor",
   "tags",
   "price",
-  "compare-at-price",
+  "compare_at_price",
   "weight",
   "inventory_stock",
   "variants_title",
@@ -89,8 +88,8 @@ export const validateRequestQuery = (
       Joi.object({
         condition: conditionSchema.required(),
         operator: Joi.string().required(),
-        value: Joi.string().required(),
-      })
+        value: [Joi.number(), Joi.string()],
+      }).required()
     ),
   });
 
