@@ -5,32 +5,6 @@ import { ProductVariants } from "../database/models/productVarients.model";
 const { MongoClient } = require("mongodb");
 
 export async function generateMongoDBQuery(reqBody: any) {
-  //   {
-  //     "queries": [
-  //       { "condition": "vendor", "operator": "contains", "value": "Acme" },
-  //       { "condition": "tags", "operator": "is equal to","value": "hat" },
-  //       { "condition": "title", "operator": "ends with", "value": "s" }
-  //    ],
-  //    "logic": "or"
-  // }
-
-  /*
-product={
-ProductTitle
-ProductType
-productVendor
-productTag
-}
-
-varients={
-Price
-compareAtPrice
-weight
-inventoryStock
-varientsTitle
-}
-*/
-
   let varientsQuery: any = [];
   let productQuery: any = [];
 
@@ -38,62 +12,57 @@ varientsTitle
     const condition = query.condition.toLowerCase();
 
     if (
-      condition.includes("title") ||
-      condition.includes("product_type") ||
-      condition.includes("vendor") ||
-      condition.includes("tags")
+      condition == "title" ||
+      condition == "product_type" ||
+      condition == "vendor" ||
+      condition == "tags"
     ) {
       productQuery.push(query);
     } else if (
-      condition.includes("price") ||
-      condition.includes("compare_at_price") ||
-      condition.includes("weight") ||
-      condition.includes("inventory_stock") ||
-      condition.includes("variants_title")
+      condition == "price" ||
+      condition == "compare_at_price" ||
+      condition == "weight" ||
+      condition == "inventory_stock" ||
+      condition == "variants_title"
     ) {
-      // If the condition is "variantstitle", change it to "title"
-      if (condition.includes("variants_title")) {
+      if (condition == "variants_title") {
         query.condition = "title";
       }
       varientsQuery.push(query);
     }
   });
 
-  let mongoQueryForProduct = mongoQueryGenerator(productQuery, reqBody.logic);
-  let mongoQueryForVarient = mongoQueryGenerator(varientsQuery, reqBody.logic);
-
-  // console.log(JSON.stringify(mongoQueryForProduct));
-  // console.log(JSON.stringify(mongoQueryForVarient));
+  // console.log(JSON.stringify(varientsQuery));
+  // console.log(JSON.stringify(productQuery));
 
   if (productQuery.length > 0 && varientsQuery.length === 0) {
+    let mongoQueryForProduct = mongoQueryGenerator(productQuery, reqBody.logic);
     const productQueryResult = await Products.find(mongoQueryForProduct);
     return productQueryResult;
   } else if (productQuery.length === 0 && varientsQuery.length > 0) {
+    let mongoQueryForVarient = mongoQueryGenerator(
+      varientsQuery,
+      reqBody.logic
+    );
     const varientsQueryResult = await ProductVariants.find(
       mongoQueryForVarient
     );
+
+    console.log(varientsQueryResult.length);
     const uniqueProductIds = Array.from(
       new Set(varientsQueryResult.map((variant) => variant.product_id))
     );
-    const sortedUniqueProductIds = uniqueProductIds.sort();
+    console.log(uniqueProductIds.length);
+
     const productsQueryResult = await Products.find({
-      _id: { $in: sortedUniqueProductIds },
+      _id: { $in: uniqueProductIds },
     });
 
     return productsQueryResult;
   } else if (productQuery.length > 0 && varientsQuery.length > 0) {
-    // Case 3: Both productQueries and varientsQueries
   } else {
     console.log("No valid queries found");
   }
-
-  // // console.log(JSON.stringify(finalQuery));
-  // try {
-  //   const result = await Products.find(finalQuery);
-  //   return result;
-  // } catch (err) {
-  //   return err;
-  // }
 
   function mongoQueryGenerator(inputQuery: any, logic: any) {
     let finalQuery;
@@ -152,7 +121,7 @@ varientsTitle
     } else {
       throw new Error(`Unsupported logic: ${logic}`);
     }
-    console.log(finalQuery);
+    console.log(JSON.stringify(finalQuery));
     return finalQuery;
   }
 }

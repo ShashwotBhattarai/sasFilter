@@ -2,9 +2,9 @@
   "name": "sasfilter",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "./src/index.ts",
   "scripts": {
-    "start": "tsc && nodemon dist/index.js"
+    "start": "npx tsc && node dist/index.js"
   },
   "author": "",
   "license": "ISC",
