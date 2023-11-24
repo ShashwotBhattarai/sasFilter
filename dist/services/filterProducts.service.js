@@ -17,10 +17,8 @@ class FilterProductsService {
         return __awaiter(this, void 0, void 0, function* () {
             const logic = reqBody.logic;
             const { varientsQuery, productQuery } = this.seperateQueries(reqBody);
-            // console.log(JSON.stringify(varientsQuery));
-            // console.log(JSON.stringify(productQuery));
             const filteredProductResponse = this.searchAndReturnProducts(productQuery, varientsQuery, logic);
-            return filteredProductResponse;
+            return { status: 200, message: filteredProductResponse };
         });
     }
     seperateQueries(mainQuery) {
@@ -45,8 +43,6 @@ class FilterProductsService {
                 varientsQuery.push(query);
             }
         });
-        // console.log(JSON.stringify(varientsQuery));
-        // console.log(JSON.stringify(productQuery));
         return {
             varientsQuery: varientsQuery,
             productQuery: productQuery,
@@ -88,6 +84,44 @@ class FilterProductsService {
                 }
             }
             else if (productQuery.length > 0 && varientsQuery.length > 0) {
+                let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery, logic);
+                let mongoQueryForProduct = this.mongoQueryGenerator(productQuery, logic);
+                try {
+                    const varientsQueryResult = yield productVarients_model_1.ProductVariants.find(mongoQueryForVarient);
+                    console.log(varientsQueryResult.length);
+                    const uniqueProductIdsFromVarient = new Set(varientsQueryResult.map((variant) => variant.product_id));
+                    console.log(uniqueProductIdsFromVarient);
+                    const productQueryResult = yield product_model_1.Products.find(mongoQueryForProduct);
+                    console.log(productQueryResult.length);
+                    const uniqueProductIdsFromProduct = new Set(productQueryResult.map((product) => product._id));
+                    console.log(uniqueProductIdsFromProduct);
+                    if (logic == "and") {
+                        const finalSetOfIds = new Set([...uniqueProductIdsFromProduct].filter((value) => uniqueProductIdsFromVarient.has(value)));
+                        const finalArrayOfIds = Array.from(finalSetOfIds);
+                        const productsQueryResult = yield product_model_1.Products.find({
+                            _id: { $in: finalArrayOfIds },
+                        });
+                        return productQueryResult;
+                    }
+                    else if (logic == "or") {
+                        console.log("iam inside or block");
+                        const finalSetOfIds = new Set([
+                            ...uniqueProductIdsFromProduct,
+                            ...uniqueProductIdsFromVarient,
+                        ]);
+                        const finalArrayOfIds = Array.from(finalSetOfIds);
+                        const productsQueryResult = yield product_model_1.Products.find({
+                            _id: { $in: finalArrayOfIds },
+                        });
+                        return productQueryResult;
+                    }
+                }
+                catch (err) {
+                    return {
+                        status: 500,
+                        message: err,
+                    };
+                }
             }
         });
     }

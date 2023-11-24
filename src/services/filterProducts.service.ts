@@ -6,12 +6,9 @@ export class FilterProductsService {
 		const logic = reqBody.logic;
 		const { varientsQuery, productQuery } = this.seperateQueries(reqBody);
 
-		// console.log(JSON.stringify(varientsQuery));
-		// console.log(JSON.stringify(productQuery));
+		const filteredProductResponse = await this.searchAndReturnProducts(productQuery, varientsQuery, logic);
 
-		const filteredProductResponse = this.searchAndReturnProducts(productQuery, varientsQuery, logic);
-
-		return filteredProductResponse;
+		return { status: filteredProductResponse?.status, message: filteredProductResponse?.message };
 	}
 
 	seperateQueries(mainQuery: any) {
@@ -41,9 +38,6 @@ export class FilterProductsService {
 				varientsQuery.push(query);
 			}
 		});
-
-		// console.log(JSON.stringify(varientsQuery));
-		// console.log(JSON.stringify(productQuery));
 
 		return {
 			varientsQuery: varientsQuery,
@@ -88,6 +82,55 @@ export class FilterProductsService {
 				};
 			}
 		} else if (productQuery.length > 0 && varientsQuery.length > 0) {
+			let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery, logic);
+			let mongoQueryForProduct = this.mongoQueryGenerator(productQuery, logic);
+
+			try {
+				const varientsQueryResult = await ProductVariants.find(mongoQueryForVarient);
+				console.log(varientsQueryResult.length);
+				const uniqueProductIdsFromVarient = new Set(
+					varientsQueryResult.map((variant) => variant.product_id)
+				);
+				console.log(uniqueProductIdsFromVarient);
+
+				const productQueryResult = await Products.find(mongoQueryForProduct);
+				console.log(productQueryResult.length);
+				const uniqueProductIdsFromProduct = new Set(productQueryResult.map((product) => product._id));
+				console.log(uniqueProductIdsFromProduct);
+
+				if (logic == "and") {
+					const finalSetOfIds = new Set(
+						[...uniqueProductIdsFromProduct].filter((value) =>
+							uniqueProductIdsFromVarient.has(value)
+						)
+					);
+					const finalArrayOfIds = Array.from(finalSetOfIds);
+					const productsQueryResult = await Products.find({
+						_id: { $in: finalArrayOfIds },
+					});
+					return { status: 200, message: productsQueryResult };
+				} else if (logic == "or") {
+					console.log("iam inside or block");
+					const finalSetOfIds = new Set([
+						...uniqueProductIdsFromProduct,
+						...uniqueProductIdsFromVarient,
+					]);
+
+					console.log(finalSetOfIds);
+					const finalArrayOfIds = Array.from(finalSetOfIds);
+					console.log(finalArrayOfIds);
+					const productsQueryResult = await Products.find({
+						_id: { $in: finalArrayOfIds },
+					});
+					console.log(productsQueryResult.length);
+					return { status: 200, message: productsQueryResult };
+				}
+			} catch (err) {
+				return {
+					status: 500,
+					message: err,
+				};
+			}
 		}
 	}
 

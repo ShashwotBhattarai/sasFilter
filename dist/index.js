@@ -26,13 +26,16 @@ app.get("/filter", request_query_validate_1.validateRequestQuery, (req, res) => 
   This is the structure of req we expect from the frontend.
   
    req.body = {
-     "queries": [
-       { "condition": "vendor", "operator": "contains", "value": "Acme" },
-       { "condition": "tags", "operator": "contains","value": "hat" },
-       { "condition": "title", "operator": "ends with", "value": "s" }
-    ],
-    "logic": "or"
-}
+          "queries": [
+            { "condition": "vendor", "operator": "contains", "value": "Acme" },
+            { "condition": "tags", "operator": "contains","value": "hat" },
+            { "condition": "title", "operator": "ends with", "value": "s" },
+            { "condition": "price", "operator": "is greater than", "value": 50 },
+            { "condition": "weight", "operator": "is less than","value": 5 },
+            { "condition": "variants_title", "operator": "contains", "value": "s" }
+        ],
+        "logic": "or"
+  }
 
   */
     const result = yield new filterProducts_service_1.FilterProductsService().filterProducts(req.body);

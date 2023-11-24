@@ -15,13 +15,16 @@ app.get("/filter", validateRequestQuery, async (req, res) => {
   This is the structure of req we expect from the frontend.
   
    req.body = {
-     "queries": [
-       { "condition": "vendor", "operator": "contains", "value": "Acme" },
-       { "condition": "tags", "operator": "contains","value": "hat" },
-       { "condition": "title", "operator": "ends with", "value": "s" }
-    ],
-    "logic": "or"
-}
+          "queries": [
+            { "condition": "vendor", "operator": "contains", "value": "Acme" },
+            { "condition": "tags", "operator": "contains","value": "hat" },
+            { "condition": "title", "operator": "ends with", "value": "s" },
+            { "condition": "price", "operator": "is greater than", "value": 50 },
+            { "condition": "weight", "operator": "is less than","value": 5 },
+            { "condition": "variants_title", "operator": "contains", "value": "s" }
+        ],
+        "logic": "or"
+  }
 
   */
 
