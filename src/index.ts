@@ -9,7 +9,9 @@ const port = 3000;
 app.use(express.json());
 
 connectDB();
-
+app.get("/", validateRequestQuery, async (req, res) => {
+	res.send("filter backend running");
+});
 app.post("/filter", validateRequestQuery, async (req, res) => {
 	const result = await new FilterProductsService().filterProducts(req.body);
 
