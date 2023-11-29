@@ -64,18 +64,23 @@ const operators = {
     ],
 };
 const conditionSchema = joi_1.default.string().valid(...conditions);
+const conditionsAndOperators_constants_1 = require("../../constants/conditionsAndOperators.constants");
+// defining validation schema for conditions
+const conditionSchema = joi_1.default.string().valid(...conditionsAndOperators_constants_1.conditions);
+// defining validation schema for conditions
 const operatorSchema = joi_1.default.object().keys({
-    title: joi_1.default.string().valid(...operators.title),
-    product_type: joi_1.default.string().valid(...operators.product_type),
-    product_category: joi_1.default.string().valid(...operators.product_category),
-    vendor: joi_1.default.string().valid(...operators.vendor),
-    tags: joi_1.default.string().valid(...operators.tags),
-    price: joi_1.default.string().valid(...operators.price),
-    compare_at_price: joi_1.default.string().valid(...operators.compare_at_price),
-    weight: joi_1.default.string().valid(...operators.weight),
-    inventory_stock: joi_1.default.string().valid(...operators.inventory_stock),
-    variants_title: joi_1.default.string().valid(...operators.variants_title),
+    title: joi_1.default.string().valid(...conditionsAndOperators_constants_1.operators.title),
+    product_type: joi_1.default.string().valid(...conditionsAndOperators_constants_1.operators.product_type),
+    product_category: joi_1.default.string().valid(...conditionsAndOperators_constants_1.operators.product_category),
+    vendor: joi_1.default.string().valid(...conditionsAndOperators_constants_1.operators.vendor),
+    tags: joi_1.default.string().valid(...conditionsAndOperators_constants_1.operators.tags),
+    price: joi_1.default.string().valid(...conditionsAndOperators_constants_1.operators.price),
+    compare_at_price: joi_1.default.string().valid(...conditionsAndOperators_constants_1.operators.compare_at_price),
+    weight: joi_1.default.string().valid(...conditionsAndOperators_constants_1.operators.weight),
+    inventory_stock: joi_1.default.string().valid(...conditionsAndOperators_constants_1.operators.inventory_stock),
+    variants_title: joi_1.default.string().valid(...conditionsAndOperators_constants_1.operators.variants_title),
 });
+//this is the middleware
 const validateRequestQuery = (req, res, next) => {
     const { logic, queries } = req.body;
     const schema = joi_1.default.object({
@@ -85,6 +90,8 @@ const validateRequestQuery = (req, res, next) => {
             operator: joi_1.default.string().required(),
             value: [joi_1.default.number(), joi_1.default.string()],
         }).required()),
+            value: joi_1.default.string().required(),
+        })),
     });
     const { error } = schema.validate(req.body);
     if (error) {

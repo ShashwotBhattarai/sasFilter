@@ -3,8 +3,8 @@ import connectDB from "./database/db.connect";
 import { FilterProductsService } from "./services/filterProducts.service";
 import { validateRequestQuery } from "./middlewares/validators/request-query.validate";
 import cors from "cors";
-
 const app = express();
+app.use(cors());
 const port = 3000;
 app.use(express.json());
 app.use(cors());
