@@ -21,7 +21,6 @@ const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 const port = 3000;
 app.use(express_1.default.json());
-app.use((0, cors_1.default)());
 (0, db_connect_1.default)();
 app.post("/filter", request_query_validate_1.validateRequestQuery, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield new filterProducts_service_1.FilterProductsService().filterProducts(req.body);
