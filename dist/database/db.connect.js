@@ -19,7 +19,7 @@ const MONGODB_URI = 'your_mongodb_connection_string';
 const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield mongoose_1.default.connect(process.env.DATABASEURI || "");
-        console.log('MongoDB connected');
+        console.log('Mongo DB connected');
     }
     catch (error) {
         console.error('MongoDB connection error:', error);

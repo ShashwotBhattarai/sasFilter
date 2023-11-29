@@ -29,14 +29,12 @@ const validateRequestQuery = (req, res, next) => {
         queries: joi_1.default.array().items(joi_1.default.object({
             condition: conditionSchema.required(),
             operator: joi_1.default.string().required(),
-            value: joi_1.default.string().required(),
-        })),
+            value: [joi_1.default.number(), joi_1.default.string()],
+        }).required()),
     });
     const { error } = schema.validate(req.body);
     if (error) {
-        return res
-            .status(400)
-            .json({ error: error.details.map((detail) => detail.message) });
+        return res.status(400).json({ error: error.details.map((detail) => detail.message) });
     }
     for (const element of queries) {
         const { error: conditionError } = conditionSchema.validate(element.condition);

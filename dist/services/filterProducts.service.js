@@ -9,16 +9,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GenerateDynamicMongoDBQueryService = void 0;
+exports.FilterProductsService = void 0;
 const product_model_1 = require("../database/models/product.model");
 const productVarients_model_1 = require("../database/models/productVarients.model");
-class GenerateDynamicMongoDBQueryService {
-    generateMongoDBQuery(reqBody) {
+class FilterProductsService {
+    filterProducts(reqBody) {
         return __awaiter(this, void 0, void 0, function* () {
             const logic = reqBody.logic;
             const { varientsQuery, productQuery } = this.seperateQueries(reqBody);
-            const productResultResponse = this.searchAndReturnProducts(varientsQuery, productQuery, logic);
-            return productResultResponse;
+            const filteredProductResponse = yield this.searchAndReturnProducts(productQuery, varientsQuery, logic);
+            return { status: filteredProductResponse === null || filteredProductResponse === void 0 ? void 0 : filteredProductResponse.status, message: filteredProductResponse === null || filteredProductResponse === void 0 ? void 0 : filteredProductResponse.message };
         });
     }
     seperateQueries(mainQuery) {
@@ -43,8 +43,6 @@ class GenerateDynamicMongoDBQueryService {
                 varientsQuery.push(query);
             }
         });
-        // console.log(JSON.stringify(varientsQuery));
-        // console.log(JSON.stringify(productQuery));
         return {
             varientsQuery: varientsQuery,
             productQuery: productQuery,
@@ -53,9 +51,11 @@ class GenerateDynamicMongoDBQueryService {
     searchAndReturnProducts(productQuery, varientsQuery, logic) {
         return __awaiter(this, void 0, void 0, function* () {
             if (productQuery.length > 0 && varientsQuery.length === 0) {
-                let mongoQueryForProduct = this.mongoQueryGenerator(productQuery, logic);
+                let mongoQueryForProduct = this.mongoQueryGenerator(productQuery);
+                let finalQuery = this.createFinalQuery(mongoQueryForProduct, logic);
                 try {
-                    const productsQueryResult = yield product_model_1.Products.find(mongoQueryForProduct);
+                    const productsQueryResult = yield product_model_1.Products.find(finalQuery);
+                    // console.log(productsQueryResult.length);
                     return { status: 200, message: productsQueryResult };
                 }
                 catch (err) {
@@ -66,10 +66,11 @@ class GenerateDynamicMongoDBQueryService {
                 }
             }
             else if (productQuery.length === 0 && varientsQuery.length > 0) {
-                let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery, logic);
+                let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery);
+                let finalQuery = this.createFinalQuery(mongoQueryForVarient, logic);
                 try {
-                    const varientsQueryResult = yield productVarients_model_1.ProductVariants.find(mongoQueryForVarient);
-                    console.log(varientsQueryResult.length);
+                    const varientsQueryResult = yield productVarients_model_1.ProductVariants.find(finalQuery);
+                    // console.log(varientsQueryResult.length);
                     const uniqueProductIds = Array.from(new Set(varientsQueryResult.map((variant) => variant.product_id)));
                     console.log(uniqueProductIds.length);
                     const productsQueryResult = yield product_model_1.Products.find({
@@ -85,11 +86,56 @@ class GenerateDynamicMongoDBQueryService {
                 }
             }
             else if (productQuery.length > 0 && varientsQuery.length > 0) {
+                let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery);
+                let finalQueryForVarient = this.createFinalQuery(mongoQueryForVarient, logic);
+                let mongoQueryForProduct = this.mongoQueryGenerator(productQuery);
+                let finalQuery = {};
+                try {
+                    const varientsQueryResult = yield productVarients_model_1.ProductVariants.find(finalQueryForVarient);
+                    // console.log(varientsQueryResult.length);
+                    const uniqueSetOfProductIdsFromVarient = new Set(varientsQueryResult.map((variant) => variant.product_id));
+                    const uniqueProductIdsFromVarient = Array.from(uniqueSetOfProductIdsFromVarient);
+                    // console.log(uniqueProductIdsFromVarient);
+                    if (logic == "and") {
+                        const q1 = {
+                            $and: mongoQueryForProduct,
+                        };
+                        const q2 = {
+                            _id: { $in: uniqueProductIdsFromVarient },
+                        };
+                        finalQuery = {
+                            $and: [q1, q2],
+                        };
+                        console.log(JSON.stringify(finalQuery));
+                        const productsQueryResult = yield product_model_1.Products.find(finalQuery);
+                        return { status: 200, message: productsQueryResult };
+                    }
+                    else if (logic == "or") {
+                        const q1 = {
+                            $or: mongoQueryForProduct,
+                        };
+                        const q2 = {
+                            _id: { $in: uniqueProductIdsFromVarient },
+                        };
+                        finalQuery = {
+                            $or: [q1, q2],
+                        };
+                        console.log(JSON.stringify(finalQuery));
+                        const productsQueryResult = yield product_model_1.Products.find(finalQuery);
+                        return { status: 200, message: productsQueryResult };
+                    }
+                }
+                catch (err) {
+                    console.log(err);
+                    return {
+                        status: 500,
+                        message: err,
+                    };
+                }
             }
         });
     }
-    mongoQueryGenerator(inputQuery, logic) {
-        let finalQuery;
+    mongoQueryGenerator(inputQuery) {
         let mongoQuery = [];
         for (const query of inputQuery) {
             const { condition, operator, value } = query;
@@ -133,6 +179,10 @@ class GenerateDynamicMongoDBQueryService {
             mongoQuery.push(subQuery);
         }
         // console.log(mongoQuery);
+        return mongoQuery;
+    }
+    createFinalQuery(mongoQuery, logic) {
+        let finalQuery;
         if (logic === "and") {
             finalQuery = { $and: mongoQuery };
         }
@@ -146,4 +196,4 @@ class GenerateDynamicMongoDBQueryService {
         return finalQuery;
     }
 }
-exports.GenerateDynamicMongoDBQueryService = GenerateDynamicMongoDBQueryService;
+exports.FilterProductsService = FilterProductsService;
