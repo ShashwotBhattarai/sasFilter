@@ -106,7 +106,7 @@ class FilterProductsService {
                         finalQuery = {
                             $and: [q1, q2],
                         };
-                        console.log(finalQuery);
+                        console.log(JSON.stringify(finalQuery));
                         const productsQueryResult = yield product_model_1.Products.find(finalQuery);
                         return { status: 200, message: productsQueryResult };
                     }
@@ -120,7 +120,7 @@ class FilterProductsService {
                         finalQuery = {
                             $or: [q1, q2],
                         };
-                        console.log(finalQuery);
+                        console.log(JSON.stringify(finalQuery));
                         const productsQueryResult = yield product_model_1.Products.find(finalQuery);
                         return { status: 200, message: productsQueryResult };
                     }
