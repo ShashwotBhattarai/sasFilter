@@ -5,65 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateRequestQuery = void 0;
 const joi_1 = __importDefault(require("joi"));
-const conditions = [
-    "title",
-    "product_type",
-    "vendor",
-    "tags",
-    "price",
-    "compare_at_price",
-    "weight",
-    "inventory_stock",
-    "variants_title",
-];
-const operators = {
-    title: [
-        "is equal to",
-        "is not equal to",
-        "starts with",
-        "ends with",
-        "contains",
-        "does not contain",
-    ],
-    product_type: [
-        "is equal to",
-        "is not equal to",
-        "starts with",
-        "ends with",
-        "contains",
-        "does not contain",
-    ],
-    product_category: ["is equal to"],
-    vendor: [
-        "is equal to",
-        "is not equal to",
-        "starts with",
-        "ends with",
-        "contains",
-        "does not contain",
-    ],
-    tags: ["is equal to"],
-    price: ["is equal to", "is not equal to", "is greater than", "is less than"],
-    compare_at_price: [
-        "is equal to",
-        "is not equal to",
-        "is greater than",
-        "is less than",
-        "is not empty",
-        "is empty",
-    ],
-    weight: ["is equal to", "is not equal to", "is greater than", "is less than"],
-    inventory_stock: ["is equal to", "is greater than", "is less than"],
-    variants_title: [
-        "is equal to",
-        "is not equal to",
-        "starts with",
-        "ends with",
-        "contains",
-        "does not contain",
-    ],
-};
-const conditionSchema = joi_1.default.string().valid(...conditions);
 const conditionsAndOperators_constants_1 = require("../../constants/conditionsAndOperators.constants");
 // defining validation schema for conditions
 const conditionSchema = joi_1.default.string().valid(...conditionsAndOperators_constants_1.conditions);
@@ -90,14 +31,10 @@ const validateRequestQuery = (req, res, next) => {
             operator: joi_1.default.string().required(),
             value: [joi_1.default.number(), joi_1.default.string()],
         }).required()),
-            value: joi_1.default.string().required(),
-        })),
     });
     const { error } = schema.validate(req.body);
     if (error) {
-        return res
-            .status(400)
-            .json({ error: error.details.map((detail) => detail.message) });
+        return res.status(400).json({ error: error.details.map((detail) => detail.message) });
     }
     for (const element of queries) {
         const { error: conditionError } = conditionSchema.validate(element.condition);
