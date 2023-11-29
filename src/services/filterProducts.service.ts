@@ -101,16 +101,29 @@ export class FilterProductsService {
 				// console.log(uniqueProductIdsFromVarient);
 
 				if (logic == "and") {
+					const q1 = {
+						$and: mongoQueryForProduct,
+					};
+					const q2 = {
+						_id: { $in: uniqueProductIdsFromVarient },
+					};
 					finalQuery = {
-						$and: [{ mongoQueryForProduct }, { _id: { $in: uniqueProductIdsFromVarient } }],
+						$and: [q1, q2],
 					};
 					console.log(finalQuery);
 					const productsQueryResult = await Products.find(finalQuery);
 
 					return { status: 200, message: productsQueryResult };
 				} else if (logic == "or") {
+					const q1 = {
+						$or: mongoQueryForProduct,
+					};
+
+					const q2 = {
+						_id: { $in: uniqueProductIdsFromVarient },
+					};
 					finalQuery = {
-						$or: [{ mongoQueryForProduct }, { _id: { $in: uniqueProductIdsFromVarient } }],
+						$or: [q1, q2],
 					};
 					console.log(finalQuery);
 					const productsQueryResult = await Products.find(finalQuery);
