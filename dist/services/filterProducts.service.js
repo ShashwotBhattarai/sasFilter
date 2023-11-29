@@ -51,10 +51,11 @@ class FilterProductsService {
     searchAndReturnProducts(productQuery, varientsQuery, logic) {
         return __awaiter(this, void 0, void 0, function* () {
             if (productQuery.length > 0 && varientsQuery.length === 0) {
-                let mongoQueryForProduct = this.mongoQueryGenerator(productQuery, logic);
+                let mongoQueryForProduct = this.mongoQueryGenerator(productQuery);
+                let finalQuery = this.createFinalQuery(mongoQueryForProduct, logic);
                 try {
-                    const productsQueryResult = yield product_model_1.Products.find(mongoQueryForProduct);
-                    console.log(productsQueryResult.length);
+                    const productsQueryResult = yield product_model_1.Products.find(finalQuery);
+                    // console.log(productsQueryResult.length);
                     return { status: 200, message: productsQueryResult };
                 }
                 catch (err) {
@@ -65,10 +66,11 @@ class FilterProductsService {
                 }
             }
             else if (productQuery.length === 0 && varientsQuery.length > 0) {
-                let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery, logic);
+                let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery);
+                let finalQuery = this.createFinalQuery(mongoQueryForVarient, logic);
                 try {
-                    const varientsQueryResult = yield productVarients_model_1.ProductVariants.find(mongoQueryForVarient);
-                    console.log(varientsQueryResult.length);
+                    const varientsQueryResult = yield productVarients_model_1.ProductVariants.find(finalQuery);
+                    // console.log(varientsQueryResult.length);
                     const uniqueProductIds = Array.from(new Set(varientsQueryResult.map((variant) => variant.product_id)));
                     console.log(uniqueProductIds.length);
                     const productsQueryResult = yield product_model_1.Products.find({
@@ -84,42 +86,35 @@ class FilterProductsService {
                 }
             }
             else if (productQuery.length > 0 && varientsQuery.length > 0) {
-                let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery, logic);
-                let mongoQueryForProduct = this.mongoQueryGenerator(productQuery, logic);
+                let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery);
+                let finalQueryForVarient = this.createFinalQuery(mongoQueryForVarient, logic);
+                let mongoQueryForProduct = this.mongoQueryGenerator(productQuery);
+                let finalQuery = {};
                 try {
-                    const varientsQueryResult = yield productVarients_model_1.ProductVariants.find(mongoQueryForVarient);
-                    console.log(varientsQueryResult.length);
-                    const uniqueProductIdsFromVarient = new Set(varientsQueryResult.map((variant) => variant.product_id));
-                    console.log(uniqueProductIdsFromVarient);
-                    const productQueryResult = yield product_model_1.Products.find(mongoQueryForProduct);
-                    console.log(productQueryResult.length);
-                    const uniqueProductIdsFromProduct = new Set(productQueryResult.map((product) => product._id));
-                    console.log(uniqueProductIdsFromProduct);
+                    const varientsQueryResult = yield productVarients_model_1.ProductVariants.find(finalQueryForVarient);
+                    // console.log(varientsQueryResult.length);
+                    const uniqueSetOfProductIdsFromVarient = new Set(varientsQueryResult.map((variant) => variant.product_id));
+                    const uniqueProductIdsFromVarient = Array.from(uniqueSetOfProductIdsFromVarient);
+                    // console.log(uniqueProductIdsFromVarient);
                     if (logic == "and") {
-                        const finalSetOfIds = new Set([...uniqueProductIdsFromProduct].filter((value) => uniqueProductIdsFromVarient.has(value)));
-                        const finalArrayOfIds = Array.from(finalSetOfIds);
-                        const productsQueryResult = yield product_model_1.Products.find({
-                            _id: { $in: finalArrayOfIds },
-                        });
+                        finalQuery = {
+                            $and: [{ mongoQueryForProduct }, { _id: { $in: uniqueProductIdsFromVarient } }],
+                        };
+                        console.log(finalQuery);
+                        const productsQueryResult = yield product_model_1.Products.find(finalQuery);
                         return { status: 200, message: productsQueryResult };
                     }
                     else if (logic == "or") {
-                        console.log("iam inside or block");
-                        const finalSetOfIds = new Set([
-                            ...uniqueProductIdsFromProduct,
-                            ...uniqueProductIdsFromVarient,
-                        ]);
-                        console.log(finalSetOfIds);
-                        const finalArrayOfIds = Array.from(finalSetOfIds);
-                        console.log(finalArrayOfIds);
-                        const productsQueryResult = yield product_model_1.Products.find({
-                            _id: { $in: finalArrayOfIds },
-                        });
-                        console.log(productsQueryResult.length);
+                        finalQuery = {
+                            $or: [{ mongoQueryForProduct }, { _id: { $in: uniqueProductIdsFromVarient } }],
+                        };
+                        console.log(finalQuery);
+                        const productsQueryResult = yield product_model_1.Products.find(finalQuery);
                         return { status: 200, message: productsQueryResult };
                     }
                 }
                 catch (err) {
+                    console.log(err);
                     return {
                         status: 500,
                         message: err,
@@ -128,8 +123,7 @@ class FilterProductsService {
             }
         });
     }
-    mongoQueryGenerator(inputQuery, logic) {
-        let finalQuery;
+    mongoQueryGenerator(inputQuery) {
         let mongoQuery = [];
         for (const query of inputQuery) {
             const { condition, operator, value } = query;
@@ -173,6 +167,10 @@ class FilterProductsService {
             mongoQuery.push(subQuery);
         }
         // console.log(mongoQuery);
+        return mongoQuery;
+    }
+    createFinalQuery(mongoQuery, logic) {
+        let finalQuery;
         if (logic === "and") {
             finalQuery = { $and: mongoQuery };
         }

@@ -47,10 +47,11 @@ export class FilterProductsService {
 
 	async searchAndReturnProducts(productQuery: any, varientsQuery: any, logic: any) {
 		if (productQuery.length > 0 && varientsQuery.length === 0) {
-			let mongoQueryForProduct = this.mongoQueryGenerator(productQuery, logic);
+			let mongoQueryForProduct = this.mongoQueryGenerator(productQuery);
+			let finalQuery = this.createFinalQuery(mongoQueryForProduct, logic);
 			try {
-				const productsQueryResult = await Products.find(mongoQueryForProduct);
-				console.log(productsQueryResult.length);
+				const productsQueryResult = await Products.find(finalQuery);
+				// console.log(productsQueryResult.length);
 				return { status: 200, message: productsQueryResult };
 			} catch (err) {
 				return {
@@ -59,12 +60,13 @@ export class FilterProductsService {
 				};
 			}
 		} else if (productQuery.length === 0 && varientsQuery.length > 0) {
-			let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery, logic);
+			let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery);
+			let finalQuery = this.createFinalQuery(mongoQueryForVarient, logic);
 
 			try {
-				const varientsQueryResult = await ProductVariants.find(mongoQueryForVarient);
+				const varientsQueryResult = await ProductVariants.find(finalQuery);
 
-				console.log(varientsQueryResult.length);
+				// console.log(varientsQueryResult.length);
 				const uniqueProductIds = Array.from(
 					new Set(varientsQueryResult.map((variant) => variant.product_id))
 				);
@@ -82,50 +84,41 @@ export class FilterProductsService {
 				};
 			}
 		} else if (productQuery.length > 0 && varientsQuery.length > 0) {
-			let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery, logic);
-			let mongoQueryForProduct = this.mongoQueryGenerator(productQuery, logic);
+			let mongoQueryForVarient = this.mongoQueryGenerator(varientsQuery);
+			let finalQueryForVarient = this.createFinalQuery(mongoQueryForVarient, logic);
+
+			let mongoQueryForProduct = this.mongoQueryGenerator(productQuery);
+			let finalQuery = {};
 
 			try {
-				const varientsQueryResult = await ProductVariants.find(mongoQueryForVarient);
-				console.log(varientsQueryResult.length);
-				const uniqueProductIdsFromVarient = new Set(
+				const varientsQueryResult = await ProductVariants.find(finalQueryForVarient);
+				// console.log(varientsQueryResult.length);
+				const uniqueSetOfProductIdsFromVarient = new Set(
 					varientsQueryResult.map((variant) => variant.product_id)
 				);
-				console.log(uniqueProductIdsFromVarient);
 
-				const productQueryResult = await Products.find(mongoQueryForProduct);
-				console.log(productQueryResult.length);
-				const uniqueProductIdsFromProduct = new Set(productQueryResult.map((product) => product._id));
-				console.log(uniqueProductIdsFromProduct);
+				const uniqueProductIdsFromVarient = Array.from(uniqueSetOfProductIdsFromVarient);
+				// console.log(uniqueProductIdsFromVarient);
 
 				if (logic == "and") {
-					const finalSetOfIds = new Set(
-						[...uniqueProductIdsFromProduct].filter((value) =>
-							uniqueProductIdsFromVarient.has(value)
-						)
-					);
-					const finalArrayOfIds = Array.from(finalSetOfIds);
-					const productsQueryResult = await Products.find({
-						_id: { $in: finalArrayOfIds },
-					});
+					finalQuery = {
+						$and: [{ mongoQueryForProduct }, { _id: { $in: uniqueProductIdsFromVarient } }],
+					};
+					console.log(finalQuery);
+					const productsQueryResult = await Products.find(finalQuery);
+
 					return { status: 200, message: productsQueryResult };
 				} else if (logic == "or") {
-					console.log("iam inside or block");
-					const finalSetOfIds = new Set([
-						...uniqueProductIdsFromProduct,
-						...uniqueProductIdsFromVarient,
-					]);
+					finalQuery = {
+						$or: [{ mongoQueryForProduct }, { _id: { $in: uniqueProductIdsFromVarient } }],
+					};
+					console.log(finalQuery);
+					const productsQueryResult = await Products.find(finalQuery);
 
-					console.log(finalSetOfIds);
-					const finalArrayOfIds = Array.from(finalSetOfIds);
-					console.log(finalArrayOfIds);
-					const productsQueryResult = await Products.find({
-						_id: { $in: finalArrayOfIds },
-					});
-					console.log(productsQueryResult.length);
 					return { status: 200, message: productsQueryResult };
 				}
 			} catch (err) {
+				console.log(err);
 				return {
 					status: 500,
 					message: err,
@@ -134,8 +127,7 @@ export class FilterProductsService {
 		}
 	}
 
-	mongoQueryGenerator(inputQuery: any, logic: any) {
-		let finalQuery;
+	mongoQueryGenerator(inputQuery: any) {
 		let mongoQuery = [];
 		for (const query of inputQuery) {
 			const { condition, operator, value } = query;
@@ -182,6 +174,11 @@ export class FilterProductsService {
 		}
 		// console.log(mongoQuery);
 
+		return mongoQuery;
+	}
+
+	createFinalQuery(mongoQuery: any, logic: any) {
+		let finalQuery;
 		if (logic === "and") {
 			finalQuery = { $and: mongoQuery };
 		} else if (logic === "or") {
