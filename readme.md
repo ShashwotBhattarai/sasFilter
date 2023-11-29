@@ -1,44 +1,67 @@
+# Filter Products Service
 
-# Project Overview
+## Overview
 
-## Objective
+This service provides functionality to filter products based on specified conditions and logic. It uses MongoDB queries to filter products from the `Products` and `ProductVariants` collections.
 
-This project aims to connect to the sasSYNC database, allowing clients to run query filters on products and collections of a specific store. The filtering is based on conditions provided by the client, using a logical operator to combine multiple queries.
+## Algorithm
 
-## HTTP Request Payload
+### 1. Input
 
-The server-side application expects an HTTP request with a JSON payload in the body. The payload should include:
+- The service expects a request body (`reqBody`) containing filtering logic (`logic`) and an array of queries (`queries`) for filtering products.
+## Example
 
-### Request Body Example
+- Below is an example of how to use the `FilterProductsService` in a Node.js application:
 
-```json
-{
-  "queries": [
-    {
-      "condition": "vendor",
-      "operator": "contains",
-      "value": "Acme"
-    },
-    {
-      "condition": "tags",
-      "operator": "contains",
-      "value": "hat"
-    },
-    {
-      "condition": "title",
-      "operator": "ends with",
-      "value": "s"
-    }
+```typescript
+
+const reqBody = {
+  queries: [
+    { condition: 'title', operator: 'contains', value: 's' },
+    { condition: 'variants_title', operator: 'contains', value: 'a' },
+    { condition: 'product_type', operator: 'contains', value: 'b' },
+    { condition: 'price', operator: 'is greater than', value: '50' }
   ],
-  "logic": "or"
-}
+  logic: 'or'
+};
+
 ```
 
-- **queries (Array):** An array of objects representing individual filtering conditions. Each object contains:
-  - **condition:** The field or property against which the query will be applied (e.g., "vendor," "tags," "title").
-  - **operator:** The type of comparison or operation to perform on the field (e.g., "contains," "ends with").
-  - **value:** The specific value to be used in the comparison.
 
-- **logic:** A logical operator determining how multiple conditions are combined. It can be either "and" or "or," specifying whether all conditions must be true (and) or at least one condition must be true (or).
+### 2. Separation of Queries
 
+- The `separateQueries` function processes the queries from the input, categorizing them into two arrays: `varientsQuery` and `productQuery`, based on the conditions provided.
+
+### 3. Filtering Products
+
+- The `searchAndReturnProducts` function processes the separated queries and performs filtering based on the logic provided.
+
+#### 3.1. If Only Product Queries Exist
+
+- If there are product queries and no variant queries, it generates a MongoDB query for products using `mongoQueryGenerator`.
+- It then creates the final query using `createFinalQuery`.
+- The service performs a MongoDB query on the `Products` collection and returns the result.
+
+#### 3.2. If Only Variant Queries Exist
+
+- If there are variant queries and no product queries, it generates a MongoDB query for variants using `mongoQueryGenerator`.
+- It creates the final query using `createFinalQuery`.
+- The service performs a MongoDB query on the `ProductVariants` collection and extracts unique product IDs.
+- It then queries the `Products` collection using the unique product IDs and returns the result.
+
+#### 3.3. If Both Product and Variant Queries Exist
+
+- If there are both product and variant queries, it generates MongoDB queries for both using `mongoQueryGenerator`.
+- It creates the final query for variants using `createFinalQuery`.
+- It queries the `ProductVariants` collection to get unique product IDs.
+- Depending on the logic (AND or OR), it combines the product and variant queries and performs a MongoDB query on the `Products` collection.
+- The result is returned.
+
+### 4. MongoDB Query Generation
+
+- The `mongoQueryGenerator` function takes an array of queries and converts them into an array of MongoDB queries.
+
+### 5. Final Query Creation
+
+- The `createFinalQuery` function takes an array of MongoDB queries and creates the final query using the provided logic (AND or OR).
 
